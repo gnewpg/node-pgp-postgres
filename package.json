@@ -1,0 +1,17 @@
+{
+  "name": "node-pgp-postgres",
+  "version": "0.0.0",
+  "scripts": {
+    "test": "tests/run.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cdauth/node-pgp-postgres.git"
+  },
+  "license": "MIT",
+  "description": "PostgreSQL keyring storage for node-openpgp.",
+  "dependencies": {
+	  "pg": "x.x.x",
+	  "node-pgp": "git://github.com/cdauth/node-pgp.git"
+  }
+}

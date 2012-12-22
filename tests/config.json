@@ -1,0 +1,3 @@
+{
+	"db": "postgres://gnewpg@localhost/gnewpg"
+}

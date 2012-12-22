@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS "keys" (
+CREATE TABLE "keys" (
 	"id" CHAR(16) PRIMARY KEY, -- Long ID of the key
 	"fingerprint" VARCHAR(40) NOT NULL UNIQUE, -- Fingerprint of the key, 32 chars for v2/v3 keys, 40 chars for v4 keys
 	"binary" bytea NOT NULL,
@@ -9,9 +9,9 @@ CREATE TABLE IF NOT EXISTS "keys" (
 	-- "primary_identity" TEXT DEFAULT NULL -- Added later, table "identities" is not defined yet here
 );
 
-CREATE INDEX IF NOT EXISTS "keys_shortid_idx" ON "keys" (SUBSTRING("id" FROM 8 FOR 8));
+CREATE INDEX "keys_shortid_idx" ON "keys" (SUBSTRING("id" FROM 8 FOR 8));
 
-CREATE TABLE IF NOT EXISTS "keys_signatures" (
+CREATE TABLE "keys_signatures" (
 	"id" CHAR(27) PRIMARY KEY,
 	"key" CHAR(16) NOT NULL REFERENCES "keys"("id"),
 	"issuer" CHAR(16) NOT NULL, -- Long ID of the key that made the signature. Not a foreign key as the key might be a subkey or unknown
@@ -24,23 +24,36 @@ CREATE TABLE IF NOT EXISTS "keys_signatures" (
 	"security" SMALLINT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS "keys_signatures_key_idx" ON "keys_signatures" ("key");
-CREATE INDEX IF NOT EXISTS "keys_signatures_issuer_idx" ON "keys_signatures" ("issuer");
+CREATE INDEX "keys_signatures_key_idx" ON "keys_signatures" ("key");
+CREATE INDEX "keys_signatures_issuer_idx" ON "keys_signatures" ("issuer");
 
-CREATE VIEW IF NOT EXISTS "keys_subkeys" AS SELECT DISTINCT
+CREATE VIEW "keys_subkeys" AS SELECT DISTINCT
 	"keys"."id" AS "id",
+	"keys"."fingerprint" AS "fingerprint",
 	"keys"."binary" AS "binary",
 	"keys"."date" AS "date",
 	"keys_signatures"."issuer" AS "parentkey",
 	"keys_signatures"."expires" AS "expires",
 	"keys_signatures"."revoked" AS "revoked",
 	LEAST("keys_signatures"."security", "keys"."security") AS "security"
-	FROM "keys", "keys_signatures" WHERE "keys_signatures"."key" = "keys"."id" AND "keys_signatures"."verified" = true AND "keys_signatures"."sigtype" = 24 AND "keys_signatures"."security" > 0 -- 24 == 0x18
+	FROM "keys", "keys_signatures" WHERE "keys_signatures"."key" = "keys"."id" AND "keys_signatures"."sigtype" = 24 -- 24 == 0x18
+;
+
+CREATE VIEW "keys_subkeys_selfsigned" AS SELECT DISTINCT
+	"keys"."id" AS "id",
+	"keys"."fingerprint" AS "fingerprint",
+	"keys"."binary" AS "binary",
+	"keys"."date" AS "date",
+	"keys_signatures"."issuer" AS "parentkey",
+	"keys_signatures"."expires" AS "expires",
+	"keys_signatures"."revoked" AS "revoked",
+	LEAST("keys_signatures"."security", "keys"."security") AS "security"
+	FROM "keys", "keys_signatures" WHERE "keys_signatures"."key" = "keys"."id" AND "keys_signatures"."verified" = true AND "keys_signatures"."sigtype" = 24 AND "keys_signatures"."security" >= 1 -- 24 == 0x18
 ;
 
 -----------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS "keys_identities" (
+CREATE TABLE "keys_identities" (
 	"id" TEXT NOT NULL, -- The ID is simply the text of the identity, thus only unique per key
 	"key" CHAR(16) NOT NULL REFERENCES "keys"("id"),
 	"name" TEXT NOT NULL,
@@ -49,10 +62,10 @@ CREATE TABLE IF NOT EXISTS "keys_identities" (
 	PRIMARY KEY("id", "key")
 );
 
-CREATE INDEX IF NOT EXISTS "keys_identities_name_idx" ON "keys_identities"("name");
-CREATE INDEX IF NOT EXISTS "keys_identities_email_idx" ON "keys_identities"("email");
+CREATE INDEX "keys_identities_name_idx" ON "keys_identities"("name");
+CREATE INDEX "keys_identities_email_idx" ON "keys_identities"("email");
 
-CREATE TABLE IF NOT EXISTS "keys_identities_signatures" (
+CREATE TABLE "keys_identities_signatures" (
 	"id" CHAR(27) PRIMARY KEY,
 	"identity" TEXT NOT NULL,
 	"key" CHAR(16) NOT NULL,
@@ -68,10 +81,10 @@ CREATE TABLE IF NOT EXISTS "keys_identities_signatures" (
 	FOREIGN KEY ("identity", "key") REFERENCES "keys_identities" ( "id", "key" )
 );
 
-CREATE INDEX IF NOT EXISTS "keys_identities_signatures_key_idx" ON "keys_identities_signatures" ("key");
-CREATE INDEX IF NOT EXISTS "keys_identities_signatures_issuer_idx" ON "keys_identities_signatures" ("issuer");
+CREATE INDEX "keys_identities_signatures_key_idx" ON "keys_identities_signatures" ("key");
+CREATE INDEX "keys_identities_signatures_issuer_idx" ON "keys_identities_signatures" ("issuer");
 
-CREATE VIEW IF NOT EXISTS "keys_identities_selfsigned" AS
+CREATE VIEW "keys_identities_selfsigned" AS
 	SELECT DISTINCT ON ( "id", "key" )
 		"keys_identities".*, "keys_identities_signatures"."expires", "keys_identities_signatures"."revoked",
 		"keys_identities_signatures"."security"
@@ -83,13 +96,13 @@ CREATE VIEW IF NOT EXISTS "keys_identities_selfsigned" AS
 		ORDER BY "keys_identities"."id" ASC, "keys_identities"."key" ASC, "keys_identities_signatures"."date" DESC
 ;
 
-ALTER TABLE IF NOT EXISTS "keys"
+ALTER TABLE "keys"
 	ADD COLUMN "primary_identity" TEXT DEFAULT NULL,
 	ADD FOREIGN KEY ("primary_identity", "id") REFERENCES "keys_identities" ("id", "key");
 
 -----------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS "keys_attributes" (
+CREATE TABLE "keys_attributes" (
 	"id" CHAR(27) NOT NULL, -- The ID is the sha1sum of the content, thus only unique per key
 	"key" CHAR(16) NOT NULL REFERENCES "keys"("id"),
 	"binary" BYTEA NOT NULL,
@@ -97,7 +110,7 @@ CREATE TABLE IF NOT EXISTS "keys_attributes" (
 	PRIMARY KEY("id", "key")
 );
 
-CREATE TABLE IF NOT EXISTS "keys_attributes_signatures" (
+CREATE TABLE "keys_attributes_signatures" (
 	"id" CHAR(27) PRIMARY KEY,
 	"attribute" CHAR(27) NOT NULL,
 	"key" CHAR(16) NOT NULL,
@@ -113,10 +126,10 @@ CREATE TABLE IF NOT EXISTS "keys_attributes_signatures" (
 	FOREIGN KEY ("attribute", "key") REFERENCES "keys_attributes"("id", "key")
 );
 
-CREATE INDEX IF NOT EXISTS "keys_identities_attributes_key_idx" ON "keys_attributes_signatures" ("key");
-CREATE INDEX IF NOT EXISTS "keys_attributes_attributes_issuer_idx" ON "keys_attributes_signatures" ("issuer");
+CREATE INDEX "keys_identities_attributes_key_idx" ON "keys_attributes_signatures" ("key");
+CREATE INDEX "keys_attributes_attributes_issuer_idx" ON "keys_attributes_signatures" ("issuer");
 
-CREATE VIEW IF NOT EXISTS "keys_attributes_selfsigned" AS
+CREATE VIEW "keys_attributes_selfsigned" AS
 	SELECT DISTINCT ON ( "id", "key" )
 		"keys_attributes".*, "keys_attributes_signatures"."expires", "keys_attributes_signatures"."revoked",
 		"keys_attributes_signatures"."security"
@@ -130,7 +143,7 @@ CREATE VIEW IF NOT EXISTS "keys_attributes_selfsigned" AS
 
 -----------------------------------------------------
 
-CREATE VIEW IF NOT EXISTS "keys_signatures_all" AS
+CREATE VIEW "keys_signatures_all" AS
 	      SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", 'keys_signatures' AS "table", NULL AS "objectcol" FROM "keys_signatures"
 	UNION SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", 'keys_identities_signatures' AS "table", 'identity' AS "objectcol" FROM "keys_identities_signatures"
 	UNION SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", 'keys_attributes_signatures' AS "table", 'attribute' AS "objectcol" FROM "keys_attributes_signatures"

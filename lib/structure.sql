@@ -144,7 +144,7 @@ CREATE VIEW "keys_attributes_selfsigned" AS
 -----------------------------------------------------
 
 CREATE VIEW "keys_signatures_all" AS
-	      SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", 'keys_signatures' AS "table", NULL AS "objectcol" FROM "keys_signatures"
-	UNION SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", 'keys_identities_signatures' AS "table", 'identity' AS "objectcol" FROM "keys_identities_signatures"
-	UNION SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", 'keys_attributes_signatures' AS "table", 'attribute' AS "objectcol" FROM "keys_attributes_signatures"
+	      SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", NULL AS "objectId", 'key' AS "type" FROM "keys_signatures"
+	UNION SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", "identity" AS "objectId", 'identity' AS "type" FROM "keys_identities_signatures"
+	UNION SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", "attribute" AS "objectId", 'attribute' AS "type" FROM "keys_attributes_signatures"
 ;

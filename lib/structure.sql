@@ -27,19 +27,17 @@ CREATE TABLE "keys_signatures" (
 CREATE INDEX "keys_signatures_key_idx" ON "keys_signatures" ("key");
 CREATE INDEX "keys_signatures_issuer_idx" ON "keys_signatures" ("issuer");
 
-CREATE VIEW "keys_subkeys" AS SELECT DISTINCT
+CREATE VIEW "keys_subkeys" AS SELECT DISTINCT ON ( "id", "parentkey" )
 	"keys"."id" AS "id",
 	"keys"."fingerprint" AS "fingerprint",
 	"keys"."binary" AS "binary",
 	"keys"."date" AS "date",
 	"keys_signatures"."issuer" AS "parentkey",
-	"keys_signatures"."expires" AS "expires",
-	"keys_signatures"."revoked" AS "revoked",
-	LEAST("keys_signatures"."security", "keys"."security") AS "security"
-	FROM "keys", "keys_signatures" WHERE "keys_signatures"."key" = "keys"."id" AND "keys_signatures"."sigtype" = 24 -- 24 == 0x18
+	"keys"."security" AS "security"
+	FROM "keys", "keys_signatures" WHERE "keys_signatures"."key" = "keys"."id" AND "keys_signatures"."sigtype" IN ( 24, 40 ) -- 24 == 0x18, 40 == 0x28
 ;
 
-CREATE VIEW "keys_subkeys_selfsigned" AS SELECT DISTINCT
+CREATE VIEW "keys_subkeys_selfsigned" AS SELECT DISTINCT ON ( "id", "parentkey" )
 	"keys"."id" AS "id",
 	"keys"."fingerprint" AS "fingerprint",
 	"keys"."binary" AS "binary",

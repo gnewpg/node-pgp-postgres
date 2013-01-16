@@ -62,8 +62,7 @@ CREATE TABLE "keys_identities" (
 	PRIMARY KEY("id", "key")
 );
 
-CREATE INDEX "keys_identities_name_idx" ON "keys_identities"("name");
-CREATE INDEX "keys_identities_email_idx" ON "keys_identities"("email");
+CREATE INDEX "keys_identities_key_idx" ON "keys_identities"("key");
 
 CREATE TABLE "keys_identities_signatures" (
 	"id" CHAR(27) NOT NULL,
@@ -82,7 +81,7 @@ CREATE TABLE "keys_identities_signatures" (
 	FOREIGN KEY ("identity", "key") REFERENCES "keys_identities" ( "id", "key" )
 );
 
-CREATE INDEX "keys_identities_signatures_key_idx" ON "keys_identities_signatures" ("key");
+CREATE INDEX "keys_identities_signatures_key_idx" ON "keys_identities_signatures" ("key", "identity");
 CREATE INDEX "keys_identities_signatures_issuer_idx" ON "keys_identities_signatures" ("issuer");
 
 CREATE VIEW "keys_identities_selfsigned" AS
@@ -128,8 +127,8 @@ CREATE TABLE "keys_attributes_signatures" (
 	FOREIGN KEY ("attribute", "key") REFERENCES "keys_attributes"("id", "key")
 );
 
-CREATE INDEX "keys_identities_attributes_key_idx" ON "keys_attributes_signatures" ("key");
-CREATE INDEX "keys_attributes_attributes_issuer_idx" ON "keys_attributes_signatures" ("issuer");
+CREATE INDEX "keys_attributes_signatures_key_idx" ON "keys_attributes_signatures" ("key", "attribute");
+CREATE INDEX "keys_attributes_signatures_issuer_idx" ON "keys_attributes_signatures" ("issuer");
 
 CREATE VIEW "keys_attributes_selfsigned" AS
 	SELECT DISTINCT ON ( "id", "key" )

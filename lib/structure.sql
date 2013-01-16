@@ -12,7 +12,7 @@ CREATE TABLE "keys" (
 CREATE INDEX "keys_shortid_idx" ON "keys" (SUBSTRING("id" FROM 8 FOR 8));
 
 CREATE TABLE "keys_signatures" (
-	"id" CHAR(27) PRIMARY KEY,
+	"id" CHAR(27) NOT NULL,
 	"key" CHAR(16) NOT NULL REFERENCES "keys"("id"),
 	"issuer" CHAR(16) NOT NULL, -- Long ID of the key that made the signature. Not a foreign key as the key might be a subkey or unknown
 	"date" TIMESTAMP NOT NULL,
@@ -20,8 +20,10 @@ CREATE TABLE "keys_signatures" (
 	"verified" BOOLEAN NOT NULL DEFAULT false,
 	"sigtype" SMALLINT NOT NULL CHECK ("sigtype" IN (25, 31, 32, 24, 40, 48)), -- 0x19, 0x1F, 0x20, 0x18, 0x28, 0x30
 	"expires" TIMESTAMP,
-	"revoked" CHAR(27) REFERENCES "keys_signatures" ("id") DEFAULT NULL,
-	"security" SMALLINT NOT NULL
+	"revoked" CHAR(27) DEFAULT NULL,
+	"security" SMALLINT NOT NULL,
+
+	UNIQUE("id", "key")
 );
 
 CREATE INDEX "keys_signatures_key_idx" ON "keys_signatures" ("key");
@@ -64,7 +66,7 @@ CREATE INDEX "keys_identities_name_idx" ON "keys_identities"("name");
 CREATE INDEX "keys_identities_email_idx" ON "keys_identities"("email");
 
 CREATE TABLE "keys_identities_signatures" (
-	"id" CHAR(27) PRIMARY KEY,
+	"id" CHAR(27) NOT NULL,
 	"identity" TEXT NOT NULL,
 	"key" CHAR(16) NOT NULL,
 	"issuer" CHAR(16) NOT NULL, -- Long ID of the key that made the signature. Not a foreign key as the key might be unknown
@@ -73,9 +75,10 @@ CREATE TABLE "keys_identities_signatures" (
 	"verified" BOOLEAN NOT NULL DEFAULT false,
 	"sigtype" SMALLINT NOT NULL CHECK ("sigtype" IN (16, 17, 18, 19, 48)), --0x10, 0x11, 0x12, 0x13, 0x30
 	"expires" TIMESTAMP,
-	"revoked" CHAR(27) REFERENCES "keys_identities_signatures" ("id") DEFAULT NULL,
+	"revoked" CHAR(27) DEFAULT NULL,
 	"security" SMALLINT NOT NULL,
 
+	UNIQUE ("id", "identity", "key"),
 	FOREIGN KEY ("identity", "key") REFERENCES "keys_identities" ( "id", "key" )
 );
 
@@ -109,7 +112,7 @@ CREATE TABLE "keys_attributes" (
 );
 
 CREATE TABLE "keys_attributes_signatures" (
-	"id" CHAR(27) PRIMARY KEY,
+	"id" CHAR(27) NOT NULL,
 	"attribute" CHAR(27) NOT NULL,
 	"key" CHAR(16) NOT NULL,
 	"issuer" CHAR(16) NOT NULL, -- Long ID of the key that made the signature. Not a foreign key as the key might be unknown
@@ -118,9 +121,10 @@ CREATE TABLE "keys_attributes_signatures" (
 	"verified" BOOLEAN NOT NULL DEFAULT false,
 	"sigtype" SMALLINT NOT NULL CHECK ("sigtype" IN (16, 17, 18, 19, 48)), --0x10, 0x11, 0x12, 0x13, 0x30
 	"expires" TIMESTAMP,
-	"revoked" CHAR(27) REFERENCES "keys_attributes_signatures" ("id") DEFAULT NULL,
+	"revoked" CHAR(27) DEFAULT NULL,
 	"security" SMALLINT NOT NULL,
 
+	UNIQUE ( "id", "attribute", "key" ),
 	FOREIGN KEY ("attribute", "key") REFERENCES "keys_attributes"("id", "key")
 );
 

@@ -2,8 +2,8 @@ CREATE TABLE "keys" (
 	"id" CHAR(16) PRIMARY KEY, -- Long ID of the key
 	"fingerprint" VARCHAR(40) NOT NULL UNIQUE, -- Fingerprint of the key, 32 chars for v2/v3 keys, 40 chars for v4 keys
 	"binary" bytea NOT NULL,
-	"date" TIMESTAMP NOT NULL,
-	"expires" TIMESTAMP DEFAULT NULL,
+	"date" TIMESTAMP WITH TIME ZONE NOT NULL,
+	"expires" TIMESTAMP WITH TIME ZONE DEFAULT NULL,
 	"revoked" CHAR(27) DEFAULT NULL, -- This can reference all three signature tables
 	"security" SMALLINT NOT NULL
 	-- "primary_identity" TEXT DEFAULT NULL -- Added later, table "identities" is not defined yet here
@@ -15,11 +15,11 @@ CREATE TABLE "keys_signatures" (
 	"id" CHAR(27) NOT NULL,
 	"key" CHAR(16) NOT NULL REFERENCES "keys"("id"),
 	"issuer" CHAR(16) NOT NULL, -- Long ID of the key that made the signature. Not a foreign key as the key might be a subkey or unknown
-	"date" TIMESTAMP NOT NULL,
+	"date" TIMESTAMP WITH TIME ZONE NOT NULL,
 	"binary" bytea NOT NULL,
 	"verified" BOOLEAN NOT NULL DEFAULT false,
 	"sigtype" SMALLINT NOT NULL CHECK ("sigtype" IN (25, 31, 32, 24, 40, 48)), -- 0x19, 0x1F, 0x20, 0x18, 0x28, 0x30
-	"expires" TIMESTAMP,
+	"expires" TIMESTAMP WITH TIME ZONE,
 	"revoked" CHAR(27) DEFAULT NULL,
 	"security" SMALLINT NOT NULL,
 
@@ -70,11 +70,11 @@ CREATE TABLE "keys_identities_signatures" (
 	"identity" TEXT NOT NULL,
 	"key" CHAR(16) NOT NULL,
 	"issuer" CHAR(16) NOT NULL, -- Long ID of the key that made the signature. Not a foreign key as the key might be unknown
-	"date" TIMESTAMP NOT NULL,
+	"date" TIMESTAMP WITH TIME ZONE NOT NULL,
 	"binary" bytea NOT NULL,
 	"verified" BOOLEAN NOT NULL DEFAULT false,
 	"sigtype" SMALLINT NOT NULL CHECK ("sigtype" IN (16, 17, 18, 19, 48)), --0x10, 0x11, 0x12, 0x13, 0x30
-	"expires" TIMESTAMP,
+	"expires" TIMESTAMP WITH TIME ZONE,
 	"revoked" CHAR(27) DEFAULT NULL,
 	"security" SMALLINT NOT NULL,
 
@@ -116,11 +116,11 @@ CREATE TABLE "keys_attributes_signatures" (
 	"attribute" CHAR(27) NOT NULL,
 	"key" CHAR(16) NOT NULL,
 	"issuer" CHAR(16) NOT NULL, -- Long ID of the key that made the signature. Not a foreign key as the key might be unknown
-	"date" TIMESTAMP NOT NULL,
+	"date" TIMESTAMP WITH TIME ZONE NOT NULL,
 	"binary" bytea NOT NULL,
 	"verified" BOOLEAN NOT NULL DEFAULT false,
 	"sigtype" SMALLINT NOT NULL CHECK ("sigtype" IN (16, 17, 18, 19, 48)), --0x10, 0x11, 0x12, 0x13, 0x30
-	"expires" TIMESTAMP,
+	"expires" TIMESTAMP WITH TIME ZONE,
 	"revoked" CHAR(27) DEFAULT NULL,
 	"security" SMALLINT NOT NULL,
 

@@ -2,7 +2,7 @@ var pgpTest = require("node-pgp/tests/keyring.js");
 var config = require("./config.json");
 var pgpPg = require("..");
 var db = require("../lib/database");
-var pgUtils = require("pg/lib/utils");
+var ConnectionParameters = require("pg/lib/connection-parameters");
 
 var SCHEMA = "gnewpgtest";
 
@@ -15,7 +15,7 @@ exports.keyring = function(test) {
 		db.query(con, 'CREATE SCHEMA "'+SCHEMA+'"', [ ], function(err) {
 			test.ifError(err);
 
-			var dbConfig = pgUtils.parseConnectionString(config.db);
+			var dbConfig = new ConnectionParameters(config.db);
 			dbConfig.schema = SCHEMA;
 
 			pgpPg.getKeyring(dbConfig, function(err, keyring) {

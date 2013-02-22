@@ -7,32 +7,40 @@ var ConnectionParameters = require("pg/lib/connection-parameters");
 var SCHEMA = "gnewpgtest";
 
 exports.keyring = function(test) {
-	var expect = 5;
+	var expect = 6;
 
 	db.getConnection(config.db, function(err, con) {
 		test.ifError(err);
 
-		db.query(con, 'CREATE SCHEMA "'+SCHEMA+'"', [ ], function(err) {
-			test.ifError(err);
-
-			var dbConfig = new ConnectionParameters(config.db);
-			dbConfig.schema = SCHEMA;
-
-			pgpPg.getKeyring(dbConfig, function(err, keyring) {
+		con.query('DROP SCHEMA IF EXISTS "'+SCHEMA+'" CASCADE', [ ], function(err) {
+			db.query(con, 'CREATE SCHEMA "'+SCHEMA+'"', [ ], function(err) {
 				test.ifError(err);
 
-				expect += pgpTest.cdauth.testKeyring(test, keyring, function(err) {
-					test.ifError(err);
-					
-					test.expect(expect);
+				var dbConfig = new ConnectionParameters(config.db);
+				dbConfig.schema = SCHEMA;
 
-					db.query(con, 'DROP SCHEMA "'+SCHEMA+'" CASCADE', [ ], function(err) {
+				pgpPg.getKeyring(dbConfig, function(err, keyring) {
+					test.ifError(err);
+
+					expect += pgpTest.cdauth.testKeyring(test, keyring, function(err) {
 						test.ifError(err);
 
-						test.done();
+						test.expect(expect);
+
+						keyring.saveChanges(function(err) { // End transaction
+							test.ifError(err);
+
+							db.query(con, 'DROP SCHEMA "'+SCHEMA+'" CASCADE', [ ], function(err) {
+								test.ifError(err);
+
+								con.end();
+
+								test.done();
+							});
+						});
 					});
-				});
-			}, true)
-		})
+				}, true)
+			});
+		});
 	})
 };

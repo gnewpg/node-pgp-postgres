@@ -13,7 +13,7 @@ CREATE INDEX "keys_shortid_idx" ON "keys" (SUBSTRING("id" FROM 8 FOR 8));
 
 CREATE TABLE "keys_signatures" (
 	"id" CHAR(27) NOT NULL,
-	"key" CHAR(16) NOT NULL REFERENCES "keys"("id"),
+	"key" CHAR(16) NOT NULL REFERENCES "keys"("id") ON DELETE CASCADE,
 	"issuer" CHAR(16) NOT NULL, -- Long ID of the key that made the signature. Not a foreign key as the key might be a subkey or unknown
 	"date" TIMESTAMP WITH TIME ZONE NOT NULL,
 	"binary" bytea NOT NULL,
@@ -55,7 +55,7 @@ CREATE VIEW "keys_subkeys_selfsigned" AS SELECT DISTINCT ON ( "id", "parentkey" 
 
 CREATE TABLE "keys_identities" (
 	"id" TEXT NOT NULL, -- The ID is simply the text of the identity, thus only unique per key
-	"key" CHAR(16) NOT NULL REFERENCES "keys"("id"),
+	"key" CHAR(16) NOT NULL REFERENCES "keys"("id") ON DELETE CASCADE,
 	"name" TEXT NOT NULL,
 	"email" TEXT,
 
@@ -78,7 +78,7 @@ CREATE TABLE "keys_identities_signatures" (
 	"security" SMALLINT NOT NULL,
 
 	UNIQUE ("id", "identity", "key"),
-	FOREIGN KEY ("identity", "key") REFERENCES "keys_identities" ( "id", "key" )
+	FOREIGN KEY ("identity", "key") REFERENCES "keys_identities" ( "id", "key" ) ON DELETE CASCADE
 );
 
 CREATE INDEX "keys_identities_signatures_key_idx" ON "keys_identities_signatures" ("key", "identity");
@@ -98,13 +98,13 @@ CREATE VIEW "keys_identities_selfsigned" AS
 
 ALTER TABLE "keys"
 	ADD COLUMN "primary_identity" TEXT DEFAULT NULL,
-	ADD FOREIGN KEY ("primary_identity", "id") REFERENCES "keys_identities" ("id", "key");
+	ADD FOREIGN KEY ("primary_identity", "id") REFERENCES "keys_identities" ("id", "key") ON DELETE CASCADE;
 
 -----------------------------------------------------
 
 CREATE TABLE "keys_attributes" (
 	"id" CHAR(27) NOT NULL, -- The ID is the sha1sum of the content, thus only unique per key
-	"key" CHAR(16) NOT NULL REFERENCES "keys"("id"),
+	"key" CHAR(16) NOT NULL REFERENCES "keys"("id") ON DELETE CASCADE,
 	"binary" BYTEA NOT NULL,
 
 	PRIMARY KEY("id", "key")
@@ -124,7 +124,7 @@ CREATE TABLE "keys_attributes_signatures" (
 	"security" SMALLINT NOT NULL,
 
 	UNIQUE ( "id", "attribute", "key" ),
-	FOREIGN KEY ("attribute", "key") REFERENCES "keys_attributes"("id", "key")
+	FOREIGN KEY ("attribute", "key") REFERENCES "keys_attributes"("id", "key") ON DELETE CASCADE
 );
 
 CREATE INDEX "keys_attributes_signatures_key_idx" ON "keys_attributes_signatures" ("key", "attribute");

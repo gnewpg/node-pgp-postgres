@@ -1,3 +1,3 @@
 {
-	"db": "postgres://gnewpg@localhost/gnewpg"
+	"db": "postgres://postgres@localhost/gnewpg"
 }

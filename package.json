@@ -11,8 +11,8 @@
   "license": "MIT",
   "description": "PostgreSQL keyring storage for node-openpgp.",
   "dependencies": {
-	  "pg": "x.x.x",
+	  "pg": "1.0.x",
 	  "node-pgp": "git://github.com/cdauth/node-pgp.git",
-	  "async": "x.x.x"
+	  "async": "0.2.x"
   }
 }

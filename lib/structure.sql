@@ -22,6 +22,7 @@ CREATE TABLE "keys_signatures" (
 	"expires" TIMESTAMP WITH TIME ZONE,
 	"revoked" CHAR(27) DEFAULT NULL,
 	"security" SMALLINT NOT NULL,
+	"trustSignature" BOOLEAN NOT NULL,
 
 	UNIQUE("id", "key")
 );
@@ -58,8 +59,12 @@ CREATE TABLE "keys_identities" (
 	"key" CHAR(16) NOT NULL REFERENCES "keys"("id") ON DELETE CASCADE,
 	"name" TEXT NOT NULL,
 	"email" TEXT,
+	"nameTrust" REAL NOT NULL DEFAULT 0,
+	"emailTrust" REAL NOT NULL DEFAULT 0,
 
-	PRIMARY KEY("id", "key")
+	PRIMARY KEY("id", "key"),
+	CHECK("nameTrust" >= 0),
+	CHECK("emailTrust" >= 0)
 );
 
 CREATE INDEX "keys_identities_key_idx" ON "keys_identities"("key");
@@ -76,6 +81,7 @@ CREATE TABLE "keys_identities_signatures" (
 	"expires" TIMESTAMP WITH TIME ZONE,
 	"revoked" CHAR(27) DEFAULT NULL,
 	"security" SMALLINT NOT NULL,
+	"trustSignature" BOOLEAN NOT NULL,
 
 	UNIQUE ("id", "identity", "key"),
 	FOREIGN KEY ("identity", "key") REFERENCES "keys_identities" ( "id", "key" ) ON DELETE CASCADE
@@ -106,8 +112,10 @@ CREATE TABLE "keys_attributes" (
 	"id" CHAR(27) NOT NULL, -- The ID is the sha1sum of the content, thus only unique per key
 	"key" CHAR(16) NOT NULL REFERENCES "keys"("id") ON DELETE CASCADE,
 	"binary" BYTEA NOT NULL,
+	"trust" REAL NOT NULL DEFAULT 0,
 
-	PRIMARY KEY("id", "key")
+	PRIMARY KEY("id", "key"),
+	CHECK("trust" >= 0)
 );
 
 CREATE TABLE "keys_attributes_signatures" (
@@ -122,6 +130,7 @@ CREATE TABLE "keys_attributes_signatures" (
 	"expires" TIMESTAMP WITH TIME ZONE,
 	"revoked" CHAR(27) DEFAULT NULL,
 	"security" SMALLINT NOT NULL,
+	"trustSignature" BOOLEAN NOT NULL,
 
 	UNIQUE ( "id", "attribute", "key" ),
 	FOREIGN KEY ("attribute", "key") REFERENCES "keys_attributes"("id", "key") ON DELETE CASCADE
@@ -145,7 +154,22 @@ CREATE VIEW "keys_attributes_selfsigned" AS
 -----------------------------------------------------
 
 CREATE VIEW "keys_signatures_all" AS
-	      SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", NULL AS "objectId", 'key' AS "type" FROM "keys_signatures"
-	UNION SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", "identity" AS "objectId", 'identity' AS "type" FROM "keys_identities_signatures"
-	UNION SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", "attribute" AS "objectId", 'attribute' AS "type" FROM "keys_attributes_signatures"
+	      SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", "security", "trustSignature", NULL AS "objectId", 'key' AS "type" FROM "keys_signatures"
+	UNION SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", "security", "trustSignature", "identity" AS "objectId", 'identity' AS "type" FROM "keys_identities_signatures"
+	UNION SELECT "id", "key", "issuer", "date", "binary", "verified", "sigtype", "expires", "revoked", "security", "trustSignature", "attribute" AS "objectId", 'attribute' AS "type" FROM "keys_attributes_signatures"
 ;
+
+-----------------------------------------------------
+
+CREATE TABLE "ownertrust" (
+	"key" CHAR(16) NOT NULL,
+	"keyPath" CHAR(16) ARRAY NOT NULL,
+	"signaturePath" CHAR(27) ARRAY NOT NULL,
+	"regexp" TEXT ARRAY NOT NULL,
+	"amount" REAL NOT NULL,
+	"level" SMALLINT NOT NULL,
+	CHECK("amount" >= 0 AND "amount" <= 1),
+	CHECK("level" >= 0)
+);
+
+CREATE INDEX "ownertrust_onkey_idx" ON "ownertrust"("key");

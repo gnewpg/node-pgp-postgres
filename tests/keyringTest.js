@@ -33,8 +33,10 @@ exports.keyring = function(test) {
 							db.query(con, 'DROP SCHEMA "'+SCHEMA+'" CASCADE', [ ], function(err) {
 								test.ifError(err);
 
-								keyring.close();
-								con.end();
+								keyring.done();
+								con.done();
+
+								db.end();
 
 								test.done();
 							});

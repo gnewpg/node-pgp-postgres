@@ -6,7 +6,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/cdauth/node-pgp-postgres.git"
+    "url": "https://github.com/gnewpg/node-pgp-postgres.git"
   },
   "license": "MIT",
   "description": "PostgreSQL keyring storage for node-pgp.",
